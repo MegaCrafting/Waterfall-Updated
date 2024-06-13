@@ -1,0 +1,99 @@
+From f4d1008586211fc564be781f16fb0736b374d425 Mon Sep 17 00:00:00 2001
+From: Minecrell <minecrell@minecrell.net>
+Date: Fri, 22 Sep 2017 13:15:09 +0200
+Subject: [PATCH] Allow plugins to use SLF4J for logging
+
+
+diff --git a/api/src/main/java/net/md_5/bungee/api/plugin/Plugin.java b/api/src/main/java/net/md_5/bungee/api/plugin/Plugin.java
+index 9660234d..3d1e9a3a 100644
+--- a/api/src/main/java/net/md_5/bungee/api/plugin/Plugin.java
++++ b/api/src/main/java/net/md_5/bungee/api/plugin/Plugin.java
+@@ -44,6 +44,13 @@ public class Plugin
+         // init( proxy, description );
+     }
+ 
++    // Waterfall start - Allow plugins to use SLF4J for logging
++    public org.slf4j.Logger getSLF4JLogger() {
++        return org.slf4j.LoggerFactory.getLogger(logger.getName());
++    }
++    // Waterfall end
++
++
+     /**
+      * Called when the plugin has just been loaded. Most of the proxy will not
+      * be initialized, so only use it for registering
+diff --git a/log4j/pom.xml b/log4j/pom.xml
+new file mode 100644
+index 00000000..81b360eb
+--- /dev/null
++++ b/log4j/pom.xml
+@@ -0,0 +1,66 @@
++<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
++    <modelVersion>4.0.0</modelVersion>
++
++    <parent>
++        <groupId>io.github.waterfallmc</groupId>
++        <artifactId>waterfall-parent</artifactId>
++        <version>1.21-R0.1-SNAPSHOT</version>
++        <relativePath>../pom.xml</relativePath>
++    </parent>
++
++    <groupId>io.github.waterfallmc</groupId>
++    <artifactId>waterfall-log4j</artifactId>
++    <version>1.21-R0.1-SNAPSHOT</version>
++    <packaging>jar</packaging>
++
++    <name>Waterfall-Log4J</name>
++    <description>Simplistic and performant Log4j2 based logger and console API designed for use with Waterfall and Minecraft related applications.</description>
++
++    <properties>
++        <log4j2.version>2.20.0</log4j2.version>
++    </properties>
++
++    <dependencies>
++        <!-- Log4j -->
++        <dependency>
++            <groupId>org.apache.logging.log4j</groupId>
++            <artifactId>log4j-core</artifactId>
++            <version>${log4j2.version}</version>
++        </dependency>
++        <dependency>
++            <groupId>org.apache.logging.log4j</groupId>
++            <artifactId>log4j-iostreams</artifactId>
++            <version>${log4j2.version}</version>
++        </dependency>
++        <dependency>
++            <groupId>org.apache.logging.log4j</groupId>
++            <artifactId>log4j-jul</artifactId>
++            <version>${log4j2.version}</version>
++        </dependency>
++        <dependency>
++            <groupId>org.apache.logging.log4j</groupId>
++            <artifactId>log4j-slf4j-impl</artifactId>
++            <version>${log4j2.version}</version>
++            <scope>runtime</scope>
++            <exclusions>
++                <exclusion>
++                    <groupId>org.slf4j</groupId>
++                    <artifactId>slf4j-api</artifactId>
++                </exclusion>
++            </exclusions>
++        </dependency>
++        <dependency>
++            <groupId>org.slf4j</groupId>
++            <artifactId>slf4j-api</artifactId>
++            <version>1.7.36</version>
++            <scope>runtime</scope>
++        </dependency>
++        <dependency>
++            <groupId>com.lmax</groupId>
++            <artifactId>disruptor</artifactId>
++            <version>3.4.4</version>
++            <scope>runtime</scope>
++        </dependency>
++    </dependencies>
++</project>
+-- 
+2.45.1
+

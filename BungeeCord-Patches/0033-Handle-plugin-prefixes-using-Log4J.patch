@@ -1,0 +1,62 @@
+From f965c5098d9a181512307340a7505613bdb2c924 Mon Sep 17 00:00:00 2001
+From: Minecrell <minecrell@minecrell.net>
+Date: Fri, 22 Sep 2017 13:07:31 +0200
+Subject: [PATCH] Handle plugin prefixes using Log4J
+
+
+diff --git a/api/src/main/java/net/md_5/bungee/api/plugin/Plugin.java b/api/src/main/java/net/md_5/bungee/api/plugin/Plugin.java
+index 2286a1ab..9660234d 100644
+--- a/api/src/main/java/net/md_5/bungee/api/plugin/Plugin.java
++++ b/api/src/main/java/net/md_5/bungee/api/plugin/Plugin.java
+@@ -102,7 +102,7 @@ public class Plugin
+         this.proxy = proxy;
+         this.description = description;
+         this.file = description.getFile();
+-        this.logger = new PluginLogger( this );
++        this.logger = Logger.getLogger(description.getName()); // Waterfall - Handle plugin prefixes in implementation
+     }
+ 
+     //
+diff --git a/log4j/src/main/resources/log4j2.xml b/log4j/src/main/resources/log4j2.xml
+new file mode 100644
+index 00000000..2e96e8fc
+--- /dev/null
++++ b/log4j/src/main/resources/log4j2.xml
+@@ -0,0 +1,33 @@
++
++<?xml version="1.0" encoding="UTF-8"?>
++<Configuration status="warn" shutdownHook="disable">
++    <Appenders>
++        <TerminalConsole name="TerminalConsole">
++            <PatternLayout>
++                <LoggerNamePatternSelector defaultPattern="%highlightError{[%d{HH:mm:ss} %level] [%logger]: %minecraftFormatting{%msg}%n%xEx}">
++                    <!-- Log root and BungeeCord loggers without prefix -->
++                    <PatternMatch key=",BungeeCord" pattern="%highlightError{[%d{HH:mm:ss} %level]: %minecraftFormatting{%msg}%n%xEx}" />
++                </LoggerNamePatternSelector>
++            </PatternLayout>
++        </TerminalConsole>
++        <RollingRandomAccessFile name="File" fileName="logs/latest.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz" immediateFlush="false">
++            <PatternLayout>
++                <LoggerNamePatternSelector defaultPattern="[%d{HH:mm:ss}] [%t/%level] [%logger]: %minecraftFormatting{%msg}{strip}%n">
++                    <!-- Log root and BungeeCord loggers without prefix -->
++                    <PatternMatch key=",BungeeCord" pattern="[%d{HH:mm:ss}] [%t/%level]: %minecraftFormatting{%msg}{strip}%n" />
++                </LoggerNamePatternSelector>
++            </PatternLayout>
++            <Policies>
++                <TimeBasedTriggeringPolicy />
++                <OnStartupTriggeringPolicy />
++            </Policies>
++        </RollingRandomAccessFile>
++    </Appenders>
++
++    <Loggers>
++        <Root level="info">
++            <AppenderRef ref="TerminalConsole" />
++            <AppenderRef ref="File" />
++        </Root>
++    </Loggers>
++</Configuration>
+\ No newline at end of file
+-- 
+2.45.1
+
